@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from sklearn.model_selection import KFold
 import sys
 
 path = "datasets/"
@@ -7,14 +8,12 @@ path = "datasets/"
 # Reading file and creating pandas dataframe
 def create_array_from_file(file: str):
     with open (path + file, "r") as f:
-        np_array = np.loadtxt(f, dtype=float)
+        np_array = np.loadtxt(f, dtype=np.float32)
         return np_array
     
 # Min-max normalization of data, using train min/max to avoid data leakage from test set
-def normalize_data(train, test):
-    normalized_train = ((train - train.min(axis=0)) / (train.max(axis=0) - train.min(axis=0)))
-    normalized_test = ((test - train.min(axis=0)) / (train.max(axis=0) - train.min(axis=0)))
-    return normalized_train, normalized_test
+def normalize_data(data):
+    return ((data - data.min(axis=0)) / (data.max(axis=0) - data.min(axis=0)))
 
 # Returns all but last column (features) of dataset
 def get_features(data):
@@ -23,4 +22,7 @@ def get_features(data):
 # Returns last column (labels) of dataset
 def get_labels(data):
     return data[:, -1]
+
+        
+        
     

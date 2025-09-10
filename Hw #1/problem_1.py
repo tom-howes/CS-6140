@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from sklearn.model_selection import KFold
 from data_handling import normalize_data, create_array_from_file, get_features, get_labels
 import sys
 
@@ -30,13 +31,29 @@ def print_errors(training_error, test_error):
 # def reverse_normalize(df):
 #     return value * (max - min) + min
 
+def kfolds(X, y):
+    kf = KFold(n_splits=10, shuffle=True, random_state=42)
+    kf.get_n_splits(X)
+    errors = []
+    for (train_index, test_index) in kf.split(X):
+        X_train, X_test = X[train_index, :], X[test_index, :]
+        y_train, y_test = y[train_index], y[test_index]
+        X_train = normalize_data(X_train)
+        X_test = normalize_data(X_test)
+        w = np.dot(np.linalg.inv(np.dot(np.transpose(X_train), X_train)), np.dot(np.transpose(X_train), y_train))
+
+        y_train_hat = np.dot(X_train, w)
+        print(y_train_hat)
+
+
 
 def housing_part_a():
     housing_training = create_array_from_file("housing_training.txt")
     housing_test = create_array_from_file("housing_test.txt")
     X_training = get_features(housing_training)
     X_test = get_features(housing_test)
-    X_training, X_test = normalize_data(X_training, X_test)
+    X_training = normalize_data(X_training)
+    X_test = normalize_data(X_test)
 
     y_test = get_labels(housing_test)
     y_training = get_labels(housing_training)   
@@ -67,29 +84,25 @@ def housing_part_a():
     print_errors(training_error, test_error)
 
 def spambase_part_a():
-    # fetch dataset 
-    spambase = fetch_ucirepo(id=94) 
+    # Load file to np array
+    data = np.loadtxt(path + "spambase.data", delimiter=",", dtype=np.float32)
+    n_samples, n_features = data.shape
+    n_features -= 1
 
-    # data (as pandas dataframes) 
-    X = spambase.data.features 
-    y = spambase.data.targets 
+    # get features and targets
+    X = data[:, 0:n_features]
+    y = data[:, n_features]
+    print(X.shape, y.shape)
 
-    # metadata
-    print(spambase.metadata) 
+    # k fold cross validation
+    kfolds(X, y)
 
-    # variable information 
-    print(spambase.variables) 
-
-    np_array = np.array(spambase.data.features)
-    print(np_array)
 
     # shuffle dataset
-    X_training = X_training.sample(frac=1)
-    print(X_training.head())
 
 def main():
-    # housing_part_a()
-    spambase_part_a()
+    housing_part_a()
+    # spambase_part_a()
 
 if __name__ == "__main__":
     main()
