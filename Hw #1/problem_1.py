@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.model_selection import KFold
 from data_handling import min_max_normalize, zero_mean_normalize, create_array_from_file, get_features, get_labels
 from normal_linear import Normal_linear
+from ridge_linear import Ridge_linear
 import sys
 
 float_formatter = "{:.3f}".format
@@ -16,7 +17,7 @@ def add_bias(x):
     return np.c_[np.ones((x.shape[0], 1)), x]
 
 def mean_sum_of_squares(y, y_hat):
-    squared_differences = (y - y_hat) ** 2
+    squared_differences = np.square(y - y_hat)
     mse = np.mean(squared_differences)
     return mse
 
@@ -78,7 +79,7 @@ def kfolds(X, y):
     
     print_accuracy(accuracies)
 
-def housing_part_a():
+def housing_data_handling():
     housing_training = create_array_from_file("housing_training.txt")
     housing_test = create_array_from_file("housing_test.txt")
     X_training = get_features(housing_training)
@@ -87,8 +88,26 @@ def housing_part_a():
     X_training = min_max_normalize(X_training)
     X_test = min_max_normalize(X_test)
 
+    y_training = get_labels(housing_training) 
     y_test = get_labels(housing_test)
-    y_training = get_labels(housing_training)   
+
+    return X_training, X_test, y_training, y_test
+
+def spambase_data_handling():
+    # Load file to np array
+    data = np.loadtxt(path + "spambase.data", delimiter=",", dtype=np.float32)
+    n_samples, n_features = data.shape
+    n_features -= 1
+
+    # get features and targets
+    X = data[:, 0:n_features]
+    y = data[:, n_features]
+    return X, y
+
+def housing_part_a():
+    print("Housing Part A)")
+    # Extract data from txt files and normalize
+    X_training, X_test, y_training, y_test = housing_data_handling()
     
     # reshape to 2d array and add bias
     X_training = add_bias(X_training)
@@ -114,25 +133,39 @@ def housing_part_a():
 
     print_errors(training_error, test_error)
 
-def spambase_part_a():
-    # Load file to np array
-    data = np.loadtxt(path + "spambase.data", delimiter=",", dtype=np.float32)
-    n_samples, n_features = data.shape
-    n_features -= 1
+def housing_part_b():
+    print("Housing Part B)")
+    X_train, X_test, y_train, y_test = housing_data_handling()
 
-    # get features and targets
-    X = data[:, 0:n_features]
-    y = data[:, n_features]
+    X_train = add_bias(X_train)
+    y_train = y_train.reshape(y_train.shape[0], 1)
+
+    housing_ridge_model = Ridge_linear()
+
+    w = housing_ridge_model.fit(X_train, y_train, 1.0)
+
+    y_train_hat = housing_ridge_model.predict(X_train, w)
+
+    train_error = mean_sum_of_squares(y_train, y_train_hat)
+
+    X_test = add_bias(X_test)
+    y_test = y_test.reshape(y_test.shape[0], 1)
+    y_test_hat = housing_ridge_model.predict(X_test, w)
+    test_error = mean_sum_of_squares(y_test, y_test_hat)
+
+    print_errors(train_error, test_error)
+    
+def spambase_part_a():
+    print("Spambase Part A)")
+    X, y = spambase_data_handling()
 
     # k fold cross validation
     kfolds(X, y)
 
-
-    # shuffle dataset
-
 def main():
-    # housing_part_a()
+    housing_part_a()
     spambase_part_a()
+    housing_part_b()
 
 if __name__ == "__main__":
     main()
