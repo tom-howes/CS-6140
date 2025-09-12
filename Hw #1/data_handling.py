@@ -12,9 +12,13 @@ def create_array_from_file(file: str):
         return np_array
     
 # Min-max normalization of data, using train min/max to avoid data leakage from test set
-def normalize_data(data):
+def min_max_normalize(data):
     return ((data - data.min(axis=0)) / (data.max(axis=0) - data.min(axis=0)))
 
+def zero_mean_normalize(data):
+    mean = data.mean(axis=0)
+    std = data.std(axis=0)
+    return (data - mean) / std
 # Returns all but last column (features) of dataset
 def get_features(data):
     return data[:, :-1] 
