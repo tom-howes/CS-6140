@@ -10,6 +10,20 @@ def create_array_from_file(file: str):
     with open (path + file, "r") as f:
         np_array = np.loadtxt(f, dtype=np.float32)
         return np_array
+
+def housing_data_handling():
+    housing_training = create_array_from_file("housing_training.txt")
+    housing_test = create_array_from_file("housing_test.txt")
+    X_training = get_features(housing_training)
+    X_test = get_features(housing_test)
+
+    X_training = min_max_normalize(X_training)
+    X_test = min_max_normalize(X_test)
+
+    y_training = get_labels(housing_training) 
+    y_test = get_labels(housing_test)
+
+    return X_training, X_test, y_training, y_test
     
 # Min-max normalization of data, using train min/max to avoid data leakage from test set
 def min_max_normalize(data):
@@ -19,6 +33,7 @@ def zero_mean_normalize(data):
     mean = data.mean(axis=0)
     std = data.std(axis=0)
     return (data - mean) / std
+
 # Returns all but last column (features) of dataset
 def get_features(data):
     return data[:, :-1] 
@@ -26,6 +41,27 @@ def get_features(data):
 # Returns last column (labels) of dataset
 def get_labels(data):
     return data[:, -1]
+
+# Adds bias - x is df, m is number of samples, n is no. of features
+# creates column of ones and appends to start of array
+def add_bias(x):
+    return np.c_[np.ones((x.shape[0], 1)), x]
+
+def mean_sum_of_squares(y, y_hat):
+    squared_differences = np.square(y - y_hat)
+    mse = np.mean(squared_differences)
+    return mse
+
+def spambase_data_handling():
+    # Load file to np array
+    data = np.loadtxt(path + "spambase.data", delimiter=",", dtype=np.float32)
+    n_samples, n_features = data.shape
+    n_features -= 1
+
+    # get features and targets
+    X = data[:, 0:n_features]
+    y = data[:, n_features]
+    return X, y
 
         
         

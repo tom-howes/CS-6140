@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import KFold
-from data_handling import min_max_normalize, zero_mean_normalize, create_array_from_file, get_features, get_labels
+from data_handling import zero_mean_normalize, spambase_data_handling, housing_data_handling, add_bias, mean_sum_of_squares
 from normal_linear import Normal_linear
 from ridge_linear import Ridge_linear
 import sys
@@ -9,17 +9,6 @@ import sys
 float_formatter = "{:.3f}".format
 
 np.set_printoptions(formatter={'float_kind':float_formatter})
-path = "datasets/"
-
-# Adds bias - x is df, m is number of samples, n is no. of features
-# creates column of ones and appends to start of array
-def add_bias(x):
-    return np.c_[np.ones((x.shape[0], 1)), x]
-
-def mean_sum_of_squares(y, y_hat):
-    squared_differences = np.square(y - y_hat)
-    mse = np.mean(squared_differences)
-    return mse
 
 def print_errors(training_error, test_error):
     print("Training error: ", training_error)
@@ -40,7 +29,7 @@ def print_accuracy(accuracies: list):
     print("Train Accuracy: ", train_accuracy)
     print("Test Accuracy: ", test_accuracy)
 
-def kfolds(X, y):
+def kfolds(X, y, modelType: str):
     # Split into 10 folds and shuffle
     kf = KFold(n_splits=10, shuffle=True)
 
@@ -49,19 +38,26 @@ def kfolds(X, y):
 
     # Normal linear model
     model = Normal_linear()
+    
+    if modelType == "Ridge":
+        model = Ridge_linear()
 
     for (train_index, test_index) in kf.split(X):
         X_train, X_test = X[train_index, :], X[test_index, :]
         y_train, y_test = y[train_index], y[test_index]
         
-        # Min-max normalization
+        # Zero mean normalization
         X_train = zero_mean_normalize(X_train)
         X_test = zero_mean_normalize(X_test)
 
         X_train = add_bias(X_train)
 
-        # Apply normal equation on training set
-        w = model.fit(X_train, y_train)
+        # Apply normal/ridge equation on training set
+        w = []
+        if modelType == "Ridge":
+            w = model.fit(X_train, y_train, 1.0)
+        else:
+            w = model.fit(X_train, y_train)
         
         # use weights to predict on training set
         y_train_hat = model.predict(X_train, w)
@@ -79,37 +75,14 @@ def kfolds(X, y):
     
     print_accuracy(accuracies)
 
-def housing_data_handling():
-    housing_training = create_array_from_file("housing_training.txt")
-    housing_test = create_array_from_file("housing_test.txt")
-    X_training = get_features(housing_training)
-    X_test = get_features(housing_test)
 
-    X_training = min_max_normalize(X_training)
-    X_test = min_max_normalize(X_test)
-
-    y_training = get_labels(housing_training) 
-    y_test = get_labels(housing_test)
-
-    return X_training, X_test, y_training, y_test
-
-def spambase_data_handling():
-    # Load file to np array
-    data = np.loadtxt(path + "spambase.data", delimiter=",", dtype=np.float32)
-    n_samples, n_features = data.shape
-    n_features -= 1
-
-    # get features and targets
-    X = data[:, 0:n_features]
-    y = data[:, n_features]
-    return X, y
 
 def housing_part_a():
     print("Housing Part A)")
     # Extract data from txt files and normalize
     X_training, X_test, y_training, y_test = housing_data_handling()
     
-    # reshape to 2d array and add bias
+    # reshape y and add bias
     X_training = add_bias(X_training)
     y_training = y_training.reshape(y_training.shape[0], 1)
 
@@ -135,19 +108,25 @@ def housing_part_a():
 
 def housing_part_b():
     print("Housing Part B)")
-    X_train, X_test, y_train, y_test = housing_data_handling()
 
+    # Extract data from txt files and normalize
+    X_train, X_test, y_train, y_test = housing_data_handling()
+    
+    # reshape y and add bias
     X_train = add_bias(X_train)
     y_train = y_train.reshape(y_train.shape[0], 1)
 
+    # init model
     housing_ridge_model = Ridge_linear()
 
+    # get coefficients with alpha value = 1.0
     w = housing_ridge_model.fit(X_train, y_train, 1.0)
 
+    # predict on training data and calculate MSE
     y_train_hat = housing_ridge_model.predict(X_train, w)
-
     train_error = mean_sum_of_squares(y_train, y_train_hat)
 
+    # Repeat for test data 
     X_test = add_bias(X_test)
     y_test = y_test.reshape(y_test.shape[0], 1)
     y_test_hat = housing_ridge_model.predict(X_test, w)
@@ -160,12 +139,20 @@ def spambase_part_a():
     X, y = spambase_data_handling()
 
     # k fold cross validation
-    kfolds(X, y)
+    kfolds(X, y, "Normal")
+
+def spambase_part_b():
+    print("Spambase Part B)")
+    X, y = spambase_data_handling()
+    kfolds(X, y, "Ridge")
+
+
 
 def main():
     housing_part_a()
     spambase_part_a()
     housing_part_b()
+    spambase_part_b()
 
 if __name__ == "__main__":
     main()
