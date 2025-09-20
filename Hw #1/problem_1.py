@@ -84,7 +84,6 @@ def housing_part_a():
     
     # reshape y and add bias
     X_training = add_bias(X_training)
-    y_training = y_training.reshape(y_training.shape[0], 1)
 
     # Init Normal Equation model
     housing_model = Normal_linear()
@@ -100,7 +99,6 @@ def housing_part_a():
 
     # Repeat on test dataset
     X_test = add_bias(X_test)
-    y_test = y_test.reshape(y_test.shape[0], 1)
     y_test_hat = housing_model.predict(X_test, w)
     test_error = mean_sum_of_squares(y_test, y_test_hat)
 
@@ -114,7 +112,6 @@ def housing_part_b():
     
     # reshape y and add bias
     X_train = add_bias(X_train)
-    y_train = y_train.reshape(y_train.shape[0], 1)
 
     # init model
     housing_ridge_model = Ridge_linear()
@@ -128,7 +125,6 @@ def housing_part_b():
 
     # Repeat for test data 
     X_test = add_bias(X_test)
-    y_test = y_test.reshape(y_test.shape[0], 1)
     y_test_hat = housing_ridge_model.predict(X_test, w)
     test_error = mean_sum_of_squares(y_test, y_test_hat)
 

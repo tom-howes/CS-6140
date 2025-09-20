@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import KFold
+from sklearn.datasets import fetch_20newsgroups
+from nltk.corpus import stopwords
+import re
 import sys
 
 path = "datasets/"
@@ -38,9 +41,10 @@ def zero_mean_normalize(data):
 def get_features(data):
     return data[:, :-1] 
 
-# Returns last column (labels) of dataset
+# Returns last column (labels) of dataset and reshapes into column vector
 def get_labels(data):
-    return data[:, -1]
+    y = data[:, -1]
+    return y.reshape(y.shape[0], 1)
 
 # Adds bias - x is df, m is number of samples, n is no. of features
 # creates column of ones and appends to start of array
@@ -63,6 +67,16 @@ def spambase_data_handling():
     y = data[:, n_features]
     return X, y
 
-        
-        
-    
+
+def fetch_20NG_data_handling(categories):
+    newsgroups_train = fetch_20newsgroups(categories=categories, shuffle=True, random_state=42, subset='train', remove=('headers', 'footers', 'quotes'))
+    newsgroups_test = fetch_20newsgroups(categories=categories, shuffle=True, random_state=42, subset='test', remove=('headers', 'footers', 'quotes'))
+    X_train, X_test, y_train, y_test = newsgroups_train.data, newsgroups_test.data, newsgroups_train.target, newsgroups_test.target
+    classes = {}
+    for idx, cat in enumerate(newsgroups_train.target_names):
+        classes[idx] = cat
+    return X_train, X_test, y_train, y_test, classes
+
+def percepton_data_handling():
+    perceptron_data = create_array_from_file("perceptron_data.txt")
+    return get_features(perceptron_data), get_labels(perceptron_data)
