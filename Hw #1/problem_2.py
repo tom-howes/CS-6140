@@ -45,9 +45,6 @@ def part_a():
         y_test_hat = model.predict(X_test)
         train_mse = mean_squared_error(y_train, y_train_hat)
         test_mse = mean_squared_error(y_test, y_test_hat)
-        print(f"Lambda value: {i}")
-        print(f"Train MSE: {train_mse}")
-        print(f"Test MSE: {test_mse}")
         x_axis.append(i)
         y_axis_test.append(test_mse)
         y_axis_train.append(train_mse)
@@ -57,11 +54,15 @@ def part_a():
 
 def print_class_accuracy(classes, y, y_pred, model: str, dataset: str):
         print(model, dataset, f"Accuracy:\n_____")
+        total_accuracy = []
         for index, class_name in classes.items():
             class_mask = (y == index)
             class_prediction = y_pred[class_mask]
             class_accuracy = accuracy_score(y[class_mask], class_prediction)
-            print("Class:\t", class_name, "\nTrain Accuracy: ", f"{class_accuracy:.3f}")
+            print("Class:\t", class_name, "\nAccuracy: ", f"{class_accuracy:.3f}")
+            total_accuracy.append(class_accuracy)
+        print(model, dataset, f"Total Accuracy:\n: ", np.mean(total_accuracy), "\n")
+
 def part_b():
     categories = ["comp.graphics", "misc.forsale", "rec.sport.baseball"
                   , "sci.space", "talk.politics.guns", "talk.politics.mideast"
@@ -135,7 +136,7 @@ def part_b():
      
 
 def main():
-    # part_a()
+    part_a()
     part_b()
 if __name__ == "__main__":
     main()
